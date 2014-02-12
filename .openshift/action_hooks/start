@@ -1,0 +1,29 @@
+#!/bin/bash
+# start rhodecode
+
+ROOT=$OPENSHIFT_DATA_DIR
+CONF_NAME="/rhodecode/production.ini"
+PID_PATH="$ROOT/rhodecode/rhodecode.pid"
+LOG_PATH="$ROOT/rhodecode/rhodecode.log"
+
+source $ROOT/rhodecode-venv/bin/activate
+
+cd $ROOT/rhodecode
+if [ -f $ROOT/rhodecode/install ]
+then
+  paster setup-rhodecode production.ini --user="admin" --password="rhodecode" --email="admin@test.com" --repos="$ROOT/rhodecode/repos" --force-yes
+  echo ">>>>>>>>>>>>>>>>>>>"
+  echo "user: admin"
+  echo "pass: rhodecode"
+  echo ">>>>>>>>>>>>>>>>>>>"
+else
+  paster upgrade-db production.ini
+fi
+
+PYTHON_EGG_CACHE="/tmp" $ROOT/rhodecode-venv/bin/paster serve --daemon \
+  --user=$USER \
+  --group=$USER \
+  --pid-file=$PID_PATH \
+  --log-file=$LOG_PATH \
+  $ROOT/$CONF_NAME
+

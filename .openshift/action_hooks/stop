@@ -1,0 +1,6 @@
+#!/bin/bash
+RH_PID=`ps -opid,comm x | grep paster | cut -d" " -f1`
+if [[ $RH_PID ]]
+then
+  kill -9 $RH_PID
+fi
