@@ -16,8 +16,9 @@ then
   echo "user: admin"
   echo "pass: rhodecode"
   echo ">>>>>>>>>>>>>>>>>>>"
+  $ROOT/rhodecode/install
 else
-  paster upgrade-db production.ini
+  paster upgrade-db production.ini --force-yes
 fi
 
 PYTHON_EGG_CACHE="/tmp" $ROOT/rhodecode-venv/bin/paster serve --daemon \
