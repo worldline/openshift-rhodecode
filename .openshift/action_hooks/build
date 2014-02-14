@@ -1,5 +1,6 @@
 #!/bin/bash
 ROOT=$OPENSHIFT_DATA_DIR
+
 if [[ $OPENSHIFT_POSTGRESQL_DB_URL ]]
 then
   DB_URL=$OPENSHIFT_POSTGRESQL_DB_URL/$PGDATABASE
@@ -17,23 +18,44 @@ then
   pip install $PIP
 fi
 
+if [ ! -f $ROOT/bin/git ]
+then
+  echo "export PATH=$ROOT/bin:$PATH" >> $ROOT/.bash_profile
+  mkdir -p $ROOT/bin
+  cd $ROOT
+  rm -rf git
+  wget https://github.com/git/git/archive/v1.8.5.5.tar.gz -O git.tar.gz
+  tar xzf git.tar.gz --transform 's/git-1.8.5.5/git/'
+  rm git.tar.gz
+  cd git
+  echo "Installing git in prefix $ROOT"
+  ./GIT-VERSION-GEN
+  make prefix=$ROOT all install
+  export PATH=$ROOT/bin:$PATH
+  echo "Installed git into $ROOT/bin"
+  cd ..
+  rm -Rf git
+  cd $ROOT/rhodecode
+fi
+
 if [ ! -f production.ini ]
 then
   pip install https://rhodecode.com/dl/tools/latest
   pip install https://rhodecode.com/dl/latest
   rhodecode-config --filename=production.ini
-
-  sed -i 's/^debug = true/debug = false/' production.ini
-  sed -i "s/^host = .*$/host = $OPENSHIFT_DIY_IP/" production.ini
-  sed -i "s/^port = .*$/port = $OPENSHIFT_DIY_PORT/" production.ini
-  sed -i 's/^use_celery = .*$/use_celery = false/' production.ini
-  if [[ $DB_URL ]]
-  then
-    sed -i 's#^sqlalchemy\.db1\.url = .*$#sqlalchemy\.db1\.url = '"$DB_URL"'#' production.ini
-  fi
   touch $ROOT/rhodecode/install
 else
   pip install --upgrade https://rhodecode.com/dl/tools/latest
   pip install --upgrade https://rhodecode.com/dl/latest
   rhodecode-config --upgrade --filename=production.ini
+fi
+
+sed -i 's/^debug = true/debug = false/' production.ini
+sed -i "s/^host = .*$/host = $OPENSHIFT_DIY_IP/" production.ini
+sed -i "s/^port = .*$/port = $OPENSHIFT_DIY_PORT/" production.ini
+sed -i 's/^use_celery = .*$/use_celery = false/' production.ini
+sed -i "s;^git_path = .*$;git_path = $ROOT/bin/git;" production.ini
+if [[ $DB_URL ]]
+then
+  sed -i 's#^sqlalchemy\.db1\.url = .*$#sqlalchemy\.db1\.url = '"$DB_URL"'#' production.ini
 fi

@@ -16,7 +16,7 @@ then
   echo "user: admin"
   echo "pass: rhodecode"
   echo ">>>>>>>>>>>>>>>>>>>"
-  $ROOT/rhodecode/install
+  rm $ROOT/rhodecode/install
 else
   paster upgrade-db production.ini --force-yes
 fi
